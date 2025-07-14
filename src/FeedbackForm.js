@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
-const supabaseKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
+const supabaseUrl = "https://evodegqwygnjtusbkdoy.supabase.co";
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV2b2RlZ3F3eWduanR1c2JrZG95Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI0ODk0MDksImV4cCI6MjA2ODA2NTQwOX0.AiCy7Et2mKXrT7V-yW5rNgtw8F_ZJLV5j7ae7uZ6JOM";
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 export default function FeedbackForm() {
@@ -10,6 +10,18 @@ export default function FeedbackForm() {
   const [npsScore, setNpsScore] = useState(null);
   const [comment, setComment] = useState("");
   const [valueScore, setValueScore] = useState(null);
+  const [averageNPS, setAverageNPS] = useState(null);
+
+  useEffect(() => {
+    const fetchAverageNPS = async () => {
+      const { data, error } = await supabase.from("feedback").select("nps_score");
+      if (error) return console.error("Error fetching NPS scores:", error);
+      const scores = data.map(d => d.nps_score);
+      const avg = scores.length ? (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1) : null;
+      setAverageNPS(avg);
+    };
+    fetchAverageNPS();
+  }, [step]);
 
   const handleSubmit = async () => {
     const payload = {
@@ -51,6 +63,11 @@ export default function FeedbackForm() {
 
   return (
     <div style={{ maxWidth: '500px', margin: '40px auto', padding: '20px', border: '1px solid #ddd', borderRadius: '8px' }}>
+      {averageNPS !== null && (
+        <div style={{ marginBottom: '20px', textAlign: 'center' }}>
+          <strong>Average NPS Score:</strong> {averageNPS}
+        </div>
+      )}
       <div>
         {step === 1 && (
           <div>
